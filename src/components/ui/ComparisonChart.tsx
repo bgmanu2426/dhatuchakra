@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +9,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { Results, AssessmentData } from '../context/AssessmentContext';
+import { Results, AssessmentData } from '../../context/AssessmentContext';
 
 ChartJS.register(
   CategoryScale,

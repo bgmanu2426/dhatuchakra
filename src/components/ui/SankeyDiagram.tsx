@@ -1,6 +1,6 @@
 import React from 'react';
 import { Chart } from 'react-google-charts';
-import { AssessmentData } from '../context/AssessmentContext';
+import { AssessmentData } from '../../context/AssessmentContext';
 
 interface SankeyDiagramProps {
   assessmentData: AssessmentData;

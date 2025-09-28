@@ -1,13 +1,15 @@
+"use client";
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Navigation } from './components/Navigation';
-import { HomePage } from './pages/HomePage';
-import { InputPage } from './pages/InputPage';
-import { AIEstimationPage } from './pages/AIEstimationPage';
-import { ResultsPage } from './pages/ResultsPage';
-import { ReportPage } from './pages/ReportPage';
-import { AboutPage } from './pages/AboutPage';
-import { AdminPage } from './pages/AdminPage';
-import { AssessmentProvider } from './context/AssessmentContext';
+import { Navigation } from '@/components/ui/Navigation';
+import { HomePage } from '@/components/HomePage';
+import { InputPage } from '@/components/InputPage';
+import { AIEstimationPage } from '@/components/AIEstimationPage';
+import { ResultsPage } from '@/components/ResultsPage';
+import { ReportPage } from '@/components/ReportPage';
+import { AboutPage } from '@/components/AboutPage';
+import { AdminPage } from '@/components/AdminPage';
+import { AssessmentProvider } from '@/context/AssessmentContext';
 
 function App() {
   return (
