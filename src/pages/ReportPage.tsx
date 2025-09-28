@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
+import { SankeyDiagram } from '../components/SankeyDiagram';
 
 export function ReportPage() {
   const { assessmentData, results, aiEstimations } = useAssessment();
@@ -222,6 +223,12 @@ AI-LCA Tool
                   <li>Renewable energy integration</li>
                 </ul>
               </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Material Flow (Sankey Diagram)</h3>
+                <SankeyDiagram assessmentData={assessmentData} />
+              </div>
+
             </div>
           </div>
 
