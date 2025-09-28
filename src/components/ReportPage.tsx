@@ -1,10 +1,11 @@
+"use client";
 import { useAssessment } from '../context/AssessmentContext';
 import { FileDown, Mail, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
-import { SankeyDiagram } from '../components/SankeyDiagram';
+import { SankeyDiagram } from './ui/SankeyDiagram';
 
 export function ReportPage() {
   const { assessmentData, results, aiEstimations } = useAssessment();
@@ -14,13 +15,11 @@ export function ReportPage() {
     if (!reportRef.current || !results) return;
 
     try {
-      const canvas = await html2canvas(reportRef.current, {
+  const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff'
       });
-      
-      const imgData = canvas.getImageData();
       const pdf = new jsPDF('p', 'mm', 'a4');
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -57,7 +56,7 @@ AI-LCA Tool
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">No assessment results available. Please complete an assessment first.</p>
-          <Link to="/input" className="mt-4 inline-block text-green-600 hover:text-green-700">
+          <Link href="/input" className="mt-4 inline-block text-green-600 hover:text-green-700">
             Start New Assessment
           </Link>
         </div>
@@ -71,7 +70,7 @@ AI-LCA Tool
         {/* Header Actions */}
         <div className="flex items-center justify-between mb-8">
           <Link
-            to="/results"
+            href="/results"
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

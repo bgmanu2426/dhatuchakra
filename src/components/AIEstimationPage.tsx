@@ -1,10 +1,11 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAssessment } from '../context/AssessmentContext';
 import { Brain, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
 export function AIEstimationPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { aiEstimations, generateAIEstimations, updateAssessmentData } = useAssessment();
   const [acceptedEstimations, setAcceptedEstimations] = useState<string[]>([]);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
@@ -31,7 +32,7 @@ export function AIEstimationPage() {
   };
 
   const handleContinue = () => {
-    navigate('/results');
+    router.push('/results');
   };
 
   const getConfidenceColor = (confidence: number) => {

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { ArrowRight, Recycle, TrendingUp, Shield, Zap } from 'lucide-react';
 
 export function HomePage() {
@@ -39,14 +39,14 @@ export function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
-              to="/input"
+              href="/input"
               className="inline-flex items-center px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg shadow-lg"
             >
               Start Assessment
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
-              to="/about"
+              href="/about"
               className="inline-flex items-center px-8 py-4 bg-white text-green-600 rounded-lg hover:bg-green-50 transition-colors font-semibold text-lg border border-green-200"
             >
               Learn More
@@ -104,7 +104,7 @@ export function HomePage() {
             Join leading companies using AI-powered LCA for better decisions
           </p>
           <Link
-            to="/input"
+            href="/input"
             className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg shadow-lg"
           >
             Begin Your Assessment

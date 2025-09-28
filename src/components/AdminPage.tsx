@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import { Upload, Database, Settings, BarChart3, Users, Download } from 'lucide-react';
 

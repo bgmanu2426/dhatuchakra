@@ -1,9 +1,10 @@
+"use client";
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { useAssessment } from '../context/AssessmentContext';
-import { MetricsCard } from '../components/MetricsCard';
-import { ComparisonChart } from '../components/ComparisonChart';
-import { SankeyDiagram } from '../components/SankeyDiagram';
+import { MetricsCard } from './ui/MetricsCard';
+import { ComparisonChart } from './ui/ComparisonChart';
+import { SankeyDiagram } from './ui/SankeyDiagram';
 import { FileDown, ArrowLeft } from 'lucide-react';
 
 export function ResultsPage() {
@@ -27,7 +28,7 @@ export function ResultsPage() {
     );
   }
 
-  const metrics = [
+  const metrics: { title: string; value: number; unit: string; trend: 'positive' | 'negative' | 'neutral' }[] = [
     { title: 'Carbon Footprint', value: results.carbonFootprint, unit: 'kg CO₂/ton', trend: results.carbonFootprint < 8000 ? 'positive' : 'negative' },
     { title: 'Recycled Content', value: results.recycledContent, unit: '%', trend: results.recycledContent > 50 ? 'positive' : 'negative' },
     { title: 'Resource Efficiency', value: results.resourceEfficiency, unit: 'Score', trend: results.resourceEfficiency > 70 ? 'positive' : 'negative' },
@@ -47,14 +48,14 @@ export function ResultsPage() {
           </div>
           <div className="flex space-x-3 sm:space-x-4">
             <Link
-              to="/input"
+              href="/input"
               className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Link>
             <Link
-              to="/report"
+              href="/report"
               className="inline-flex items-center px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs sm:text-sm"
             >
               <FileDown className="h-4 w-4 mr-2" />

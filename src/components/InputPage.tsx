@@ -1,10 +1,11 @@
+"use client";
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAssessment } from '../context/AssessmentContext';
 import { Upload, ArrowRight, RefreshCw } from 'lucide-react';
 
 export function InputPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { assessmentData, updateAssessmentData, resetAssessment } = useAssessment();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export function InputPage() {
     // Simulate processing time
     setTimeout(() => {
       setIsLoading(false);
-      navigate('/ai-estimation');
+      router.push('/ai-estimation');
     }, 1500);
   };
 

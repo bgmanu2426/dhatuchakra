@@ -4,9 +4,9 @@ interface MetricsCardProps {
   title: string;
   value: number;
   unit: string;
-  icon: string;
+  icon?: string;
   trend: 'positive' | 'negative' | 'neutral';
-  description: string;
+  description?: string;
 }
 
 export function MetricsCard({ title, value, unit, icon, trend, description }: MetricsCardProps) {
@@ -26,7 +26,7 @@ export function MetricsCard({ title, value, unit, icon, trend, description }: Me
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <div className="text-2xl">{icon}</div>
+        <div className="text-2xl">{icon ?? ''}</div>
         <div className={`p-2 rounded-full ${getTrendColor()}`}>
           <TrendIcon className="h-4 w-4" />
         </div>
@@ -41,7 +41,7 @@ export function MetricsCard({ title, value, unit, icon, trend, description }: Me
         <span className="text-sm text-gray-600">{unit}</span>
       </div>
       
-      <p className="text-sm text-gray-600">{description}</p>
+  {description && <p className="text-sm text-gray-600">{description}</p>}
       
       <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
         <div 
