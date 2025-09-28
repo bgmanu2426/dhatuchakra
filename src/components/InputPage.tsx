@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAssessment } from '../context/AssessmentContext';
 import { Upload, ArrowRight, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function InputPage() {
   const router = useRouter();
@@ -17,11 +18,12 @@ export function InputPage() {
     const missingFields = requiredFields.filter(field => !assessmentData[field as keyof typeof assessmentData]);
     
     if (missingFields.length > 0) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setIsLoading(true);
+    toast.success('Assessment started successfully!');
     
     // Simulate processing time
     setTimeout(() => {
@@ -32,6 +34,11 @@ export function InputPage() {
 
   const handleInputChange = (field: string, value: string) => {
     updateAssessmentData({ [field]: value });
+  };
+
+  const handleReset = () => {
+    resetAssessment();
+    toast.success('Form reset successfully');
   };
 
   return (
@@ -61,6 +68,8 @@ export function InputPage() {
                 <option value="Aluminium">Aluminium</option>
                 <option value="Copper">Copper</option>
                 <option value="Lithium">Lithium</option>
+                <option value="Steel">Steel</option>
+                <option value="Iron">Iron</option>
               </select>
             </div>
 
@@ -100,8 +109,10 @@ export function InputPage() {
               >
                 <option value="">Select energy source</option>
                 <option value="Coal">Coal</option>
+                <option value="Natural Gas">Natural Gas</option>
                 <option value="Mixed">Mixed Grid</option>
                 <option value="Hydro">Hydroelectric</option>
+                <option value="Nuclear">Nuclear</option>
                 <option value="Renewable">Renewable (Solar/Wind)</option>
               </select>
             </div>
@@ -153,35 +164,38 @@ export function InputPage() {
             </div>
 
             {/* Optional Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantity (tons)
-                </label>
-                <input
-                  type="number"
-                  value={assessmentData.quantity || ''}
-                  onChange={(e) => handleInputChange('quantity', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="e.g., 1000"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Region
-                </label>
-                <select
-                  value={assessmentData.region || ''}
-                  onChange={(e) => handleInputChange('region', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="">Select region</option>
-                  <option value="North America">North America</option>
-                  <option value="Europe">Europe</option>
-                  <option value="Asia-Pacific">Asia-Pacific</option>
-                  <option value="South America">South America</option>
-                  <option value="Africa">Africa</option>
-                </select>
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Optional Parameters</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Quantity (tons)
+                  </label>
+                  <input
+                    type="number"
+                    value={assessmentData.quantity || ''}
+                    onChange={(e) => handleInputChange('quantity', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="e.g., 1000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Region
+                  </label>
+                  <select
+                    value={assessmentData.region || ''}
+                    onChange={(e) => handleInputChange('region', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="">Select region</option>
+                    <option value="North America">North America</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Asia-Pacific">Asia-Pacific</option>
+                    <option value="South America">South America</option>
+                    <option value="Africa">Africa</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -192,12 +206,23 @@ export function InputPage() {
                 <p className="text-sm text-gray-600 mb-2">
                   Optional: Upload CSV/Excel with detailed parameters
                 </p>
-                <button
-                  type="button"
-                  className="text-green-600 hover:text-green-700 font-medium text-sm"
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      toast.success(`File "${e.target.files[0].name}" uploaded successfully`);
+                    }
+                  }}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="text-green-600 hover:text-green-700 font-medium text-sm cursor-pointer"
                 >
                   Choose file
-                </button>
+                </label>
               </div>
             </div>
 
@@ -205,7 +230,7 @@ export function InputPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-between pt-6 border-t border-gray-200">
               <button
                 type="button"
-                onClick={resetAssessment}
+                onClick={handleReset}
                 className="flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />

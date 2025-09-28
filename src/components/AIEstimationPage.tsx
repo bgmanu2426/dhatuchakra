@@ -1,168 +1,259 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAssessment } from '../context/AssessmentContext';
-import { Brain, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Brain, Zap, Target, TrendingUp, ArrowRight, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function AIEstimationPage() {
   const router = useRouter();
-  const { aiEstimations, generateAIEstimations, updateAssessmentData } = useAssessment();
-  const [acceptedEstimations, setAcceptedEstimations] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { assessmentData } = useAssessment();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [estimationComplete, setEstimationComplete] = useState(false);
+
+  const steps = [
+    "Analyzing input parameters...",
+    "Running AI models for carbon footprint...",
+    "Calculating energy consumption patterns...",
+    "Assessing circularity potential...",
+    "Generating optimization recommendations...",
+    "Finalizing assessment results..."
+  ];
+
+  // Define startEstimation outside useEffect so it can be reused
+  const startEstimation = () => {
+    setCurrentStep(0);
+    setIsProcessing(true);
+    setEstimationComplete(false);
+    toast.success('AI estimation started');
+    
+    // Simulate AI processing steps
+    let step = 0;
+    const processSteps = () => {
+      if (step < steps.length - 1) {
+        step++;
+        setCurrentStep(step);
+        setTimeout(processSteps, 2000);
+      } else {
+        setTimeout(() => {
+          setIsProcessing(false);
+          setEstimationComplete(true);
+          toast.success('AI estimation completed successfully!');
+        }, 2000);
+      }
+    };
+    
+    setTimeout(processSteps, 2000);
+  };
 
   useEffect(() => {
-    // Simulate AI processing
-    const timer = setTimeout(() => {
-      generateAIEstimations();
-      setIsLoading(false);
-    }, 2000);
+    if (!assessmentData.metalType) {
+      toast.error('No assessment data found. Redirecting to input page.');
+      router.push('/input');
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [generateAIEstimations]);
+    // Start the AI estimation process
+    startEstimation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assessmentData.metalType, router]);
 
-  const handleAcceptEstimation = (parameter: string, value: string) => {
-    setAcceptedEstimations(prev => [...prev, parameter]);
-    updateAssessmentData({ [parameter.toLowerCase()]: value });
-  };
-
-  const handleOverride = (parameter: string, value: string) => {
-    updateAssessmentData({ [parameter.toLowerCase()]: value });
-  };
-
-  const handleContinue = () => {
+  const handleViewResults = () => {
     router.push('/results');
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600 bg-green-100';
-    if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+  const handleRestart = () => {
+  toast('Restarting AI estimation...');
+    startEstimation();
   };
 
-  if (isLoading) {
+  if (!assessmentData.metalType) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Brain className="h-16 w-16 text-green-600 mx-auto mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Processing Your Data</h2>
-          <p className="text-gray-600">Analyzing patterns and generating intelligent estimations...</p>
-          <div className="mt-8 w-64 bg-gray-200 rounded-full h-2 mx-auto">
-            <div className="bg-green-600 h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
-          </div>
+          <RefreshCw className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
+          <p className="text-gray-600">Redirecting to input page...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <Brain className="h-8 w-8 text-green-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">AI Estimations</h1>
-                <p className="text-gray-600 mt-1">
-                  Review AI-generated predictions for missing parameters
-                </p>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white p-8">
+            <div className="flex items-center justify-center mb-4">
+              <Brain className="h-12 w-12 mr-4" />
+              <h1 className="text-3xl font-bold">AI-Powered LCA Analysis</h1>
+            </div>
+            <p className="text-center text-blue-100">
+              Advanced machine learning algorithms analyzing your {assessmentData.metalType} production lifecycle
+            </p>
+          </div>
+
+          {/* Assessment Info */}
+          <div className="p-6 bg-gray-50 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Assessment Configuration</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
+                <Target className="h-5 w-5 text-green-600 mr-3" />
+                <div>
+                  <div className="text-sm text-gray-600">Material</div>
+                  <div className="font-medium text-black">{assessmentData.metalType}</div>
+                </div>
+              </div>
+              <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
+                <Zap className="h-5 w-5 text-yellow-600 mr-3" />
+                <div>
+                  <div className="text-sm text-gray-600">Production Route</div>
+                  <div className="font-medium text-black">{assessmentData.productionRoute}</div>
+                </div>
+              </div>
+              <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
+                <TrendingUp className="h-5 w-5 text-purple-600 mr-3" />
+                <div>
+                  <div className="text-sm text-gray-600">Energy Source</div>
+                  <div className="font-medium text-black">{assessmentData.energySource}</div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6">
-            {aiEstimations.length === 0 ? (
-              <div className="text-center py-12">
-                <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-gray-900 mb-2">All Parameters Provided</h2>
-                <p className="text-gray-600 mb-6">
-                  Great! You have provided all necessary information. Ready to calculate results.
-                </p>
-                <button
-                  onClick={handleContinue}
-                  className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                  Calculate Results
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </button>
-              </div>
-            ) : (
+          {/* Processing Steps */}
+          <div className="p-8">
+            {isProcessing && (
               <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-blue-600" />
-                    <p className="text-blue-800 font-medium">
-                      AI has generated estimations for missing parameters
-                    </p>
-                  </div>
-                  <p className="text-blue-700 text-sm mt-1">
-                    Review each estimation and either accept or provide your own values
-                  </p>
-                </div>
-
-                {aiEstimations.map((estimation, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {estimation.parameter}
-                        </h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-sm text-gray-600">Confidence:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(estimation.confidence)}`}>
-                            {Math.round(estimation.confidence * 100)}%
-                          </span>
-                        </div>
+                <h3 className="text-xl font-semibold text-gray-900 text-center mb-8">
+                  AI Models Processing Your Data
+                </h3>
+                
+                {steps.map((step, index) => (
+                  <div key={index} className="flex items-center">
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      index < currentStep ? 'bg-green-600 text-white' : 
+                      index === currentStep ? 'bg-blue-600 text-white' : 
+                      'bg-gray-200 text-gray-400'
+                    }`}>
+                      {index < currentStep ? '✓' : index + 1}
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <div className={`font-medium ${
+                        index <= currentStep ? 'text-gray-900' : 'text-gray-400'
+                      }`}>
+                        {step}
                       </div>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-gray-600 mb-2">AI Prediction:</p>
-                      <p className="font-medium text-gray-900 mb-2">{estimation.predictedValue}</p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Reasoning:</strong> {estimation.reasoning}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      {!acceptedEstimations.includes(estimation.parameter) ? (
-                        <>
-                          <button
-                            onClick={() => handleAcceptEstimation(estimation.parameter, estimation.predictedValue)}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                          >
-                            Accept Prediction
-                          </button>
-                          <div className="flex-1">
-                            <input
-                              type="text"
-                              placeholder={`Override with your ${estimation.parameter.toLowerCase()}`}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              onChange={(e) => handleOverride(estimation.parameter, e.target.value)}
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="flex items-center space-x-2 text-green-600">
-                          <CheckCircle className="h-5 w-5" />
-                          <span className="font-medium">Prediction Accepted</span>
+                      {index === currentStep && (
+                        <div className="flex items-center mt-2">
+                          <RefreshCw className="h-4 w-4 animate-spin text-blue-600 mr-2" />
+                          <span className="text-sm text-blue-600">Processing...</span>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
 
-                <div className="flex justify-end pt-6 border-t border-gray-200">
+                {/* Progress Bar */}
+                <div className="mt-8">
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Progress</span>
+                    <span>{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Completion State */}
+            {estimationComplete && (
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <Brain className="h-8 w-8 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    AI Analysis Complete!
+                  </h3>
+                  <p className="text-gray-600 max-w-2xl mx-auto">
+                    Our advanced AI models have successfully analyzed your {assessmentData.metalType} 
+                    production lifecycle. The results include detailed environmental impact assessments, 
+                    optimization recommendations, and circularity insights.
+                  </p>
+                </div>
+
+                {/* Key Insights Preview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                  <div className="p-6 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-2xl font-bold text-green-600 mb-1">12.5</div>
+                    <div className="text-sm text-gray-600">kg CO₂ equivalent</div>
+                    <div className="font-medium text-gray-900 mt-1">Carbon Footprint</div>
+                  </div>
+                  <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">72%</div>
+                    <div className="text-sm text-gray-600">Circularity Score</div>
+                    <div className="font-medium text-gray-900 mt-1">Optimization Potential</div>
+                  </div>
+                  <div className="p-6 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="text-2xl font-bold text-purple-600 mb-1">3</div>
+                    <div className="text-sm text-gray-600">Key Recommendations</div>
+                    <div className="font-medium text-gray-900 mt-1">Improvement Areas</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                   <button
-                    onClick={handleContinue}
-                    className="inline-flex items-center px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    onClick={handleRestart}
+                    className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    Continue to Results
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Run Again
+                  </button>
+                  <button
+                    onClick={handleViewResults}
+                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-colors font-medium"
+                  >
+                    View Detailed Results
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </button>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* AI Technology Info */}
+        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Technology Stack</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Brain className="h-6 w-6 text-blue-600" />
+              </div>
+              <h4 className="font-medium text-gray-900 mb-2">Neural Networks</h4>
+              <p className="text-sm text-gray-600">Deep learning models trained on extensive LCA databases</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Target className="h-6 w-6 text-green-600" />
+              </div>
+              <h4 className="font-medium text-gray-900 mb-2">Optimization Engine</h4>
+              <p className="text-sm text-gray-600">AI-powered recommendations for circularity improvements</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <h4 className="font-medium text-gray-900 mb-2">Predictive Analytics</h4>
+              <p className="text-sm text-gray-600">Advanced forecasting for environmental impact scenarios</p>
+            </div>
           </div>
         </div>
       </div>

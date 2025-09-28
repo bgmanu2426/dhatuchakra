@@ -1,15 +1,18 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface MetricsCardProps {
   title: string;
   value: number;
   unit: string;
-  icon?: string;
+  icon?: ReactNode;
   trend: 'positive' | 'negative' | 'neutral';
+  trendLabel?: string;
   description?: string;
+  maxValue?: number;
 }
 
-export function MetricsCard({ title, value, unit, icon, trend, description }: MetricsCardProps) {
+export function MetricsCard({ title, value, unit, icon, trend, trendLabel, description, maxValue }: MetricsCardProps) {
   const getTrendColor = () => {
     switch (trend) {
       case 'positive':
@@ -21,12 +24,15 @@ export function MetricsCard({ title, value, unit, icon, trend, description }: Me
     }
   };
 
-  const TrendIcon = trend === 'positive' ? TrendingUp : TrendingDown;
+  const TrendIcon = trend === 'negative' ? TrendingDown : TrendingUp;
+
+  const computedMax = maxValue ?? (unit === '%' ? 100 : unit.toLowerCase().includes('kg') ? 100 : 100);
+  const progressWidth = Math.min(100, (value / computedMax) * 100);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <div className="text-2xl">{icon ?? ''}</div>
+        <div className="text-2xl">{icon ?? null}</div>
         <div className={`p-2 rounded-full ${getTrendColor()}`}>
           <TrendIcon className="h-4 w-4" />
         </div>
@@ -40,15 +46,21 @@ export function MetricsCard({ title, value, unit, icon, trend, description }: Me
         </span>
         <span className="text-sm text-gray-600">{unit}</span>
       </div>
+
+      {trendLabel && (
+        <div className="text-sm font-medium text-gray-600 mb-3">
+          {trendLabel}
+        </div>
+      )}
       
-  {description && <p className="text-sm text-gray-600">{description}</p>}
+      {description && <p className="text-sm text-gray-600">{description}</p>}
       
       <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
         <div 
           className={`h-2 rounded-full transition-all duration-500 ${
             trend === 'positive' ? 'bg-green-500' : trend === 'negative' ? 'bg-red-500' : 'bg-gray-500'
           }`}
-          style={{ width: `${Math.min(100, (value / (unit === '%' ? 100 : unit === 'Score' ? 100 : 15000)) * 100)}%` }}
+          style={{ width: `${progressWidth}%` }}
         />
       </div>
     </div>

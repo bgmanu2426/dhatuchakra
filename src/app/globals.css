@@ -25,3 +25,17 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Ensure form controls have dark text even in dark mode backgrounds */
+@layer base {
+  input,
+  select,
+  textarea {
+    color: #111827; /* tailwind gray-900 */
+    background-color: #ffffff; /* keep white backgrounds for clarity */
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #9CA3AF; /* gray-400 */
+  }
+}
