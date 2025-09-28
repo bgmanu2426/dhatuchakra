@@ -1,28 +1,26 @@
-import { Chart } from "react-google-charts";
-import { AssessmentData } from '../context/AssessmentContext';
+
+import React from 'react';
+import { Chart } from 'react-google-charts';
+import { Assessment } from '../context/AssessmentContext';
 
 interface SankeyDiagramProps {
-  assessmentData: AssessmentData;
+  assessmentData: Assessment;
 }
 
-export function SankeyDiagram({ assessmentData }: SankeyDiagramProps) {
-
-  function getEndOfLifeLabel(endOfLife: string): string {
-    switch (endOfLife) {
-      case 'Recycle': return 'Recycling';
-      case 'Reuse': return 'Reuse';
-      case 'Landfill': return 'Disposal';
-      case 'Incineration': return 'Energy Recovery';
-      default: return 'End of Life';
-    }
-  }
+export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ assessmentData }) => {
+  const { metalType, productionRoute, energySource, transportMode, endOfLife } = assessmentData;
 
   const data = [
     ['From', 'To', 'Weight'],
-    ['Raw Materials', 'Production', assessmentData.productionRoute === 'Raw' ? 80 : 20],
-    ['Recycled Materials', 'Production', assessmentData.productionRoute === 'Recycled' ? 80 : 20],
-    ['Production', 'Use Phase', 100],
-    ['Use Phase', getEndOfLifeLabel(assessmentData.endOfLife), 100],
+    ['Raw Material', `Primary Production (${metalType})`, 100],
+    [`Primary Production (${metalType})`, 'Product Manufacturing', 80],
+    ['Energy', `Primary Production (${metalType})`, 20],
+    ['Product Manufacturing', 'Use Phase', 80],
+    ['Use Phase', 'End of Life', 80],
+    ['End of Life', 'Recycling', 60],
+    ['End of Life', 'Landfill', 20],
+    ['Recycling', `Secondary Production (${metalType})`, 60],
+    [`Secondary Production (${metalType})`, 'Product Manufacturing', 60],
   ];
 
   const options = {
@@ -46,4 +44,4 @@ export function SankeyDiagram({ assessmentData }: SankeyDiagramProps) {
       options={options}
     />
   );
-}
+};

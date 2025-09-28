@@ -28,8 +28,7 @@ interface ComparisonChartProps {
 export function ComparisonChart({ results, assessmentData }: ComparisonChartProps) {
   const chartRef = useRef<ChartJS<'bar', number[], string>>(null);
 
-  // Calculate linear scenario (worst case)
-  const linearEmissions = results.carbonFootprint * 1.5; // Assume 50% worse for linear
+  const linearEmissions = results.carbonFootprint * 1.5;
   const circularEmissions = results.carbonFootprint;
 
   const data = {
@@ -39,8 +38,8 @@ export function ComparisonChart({ results, assessmentData }: ComparisonChartProp
         label: 'Linear Process',
         data: [
           linearEmissions,
-          100, // Normalized resource consumption
-          85   // Normalized waste generation
+          100,
+          85
         ],
         backgroundColor: 'rgba(239, 68, 68, 0.8)',
         borderColor: 'rgba(239, 68, 68, 1)',
@@ -105,20 +104,22 @@ export function ComparisonChart({ results, assessmentData }: ComparisonChartProp
   };
 
   return (
-    <div className="h-80">
-      <Bar ref={chartRef} data={data} options={options} />
+    <div>
+      <div className="h-72 sm:h-80">
+        <Bar ref={chartRef} data={data} options={options} />
+      </div>
       
-      <div className="mt-4 grid grid-cols-1 gap-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Improvement Potential:</span>
+      <div className="mt-6 space-y-3 px-2">
+        <div className="flex flex-col sm:flex-row sm:justify-between text-sm">
+          <span className="text-gray-600 mb-1 sm:mb-0">Improvement Potential:</span>
           <span className="font-medium text-green-600">
-            {Math.round(((linearEmissions - circularEmissions) / linearEmissions) * 100)}% reduction
+            {Math.round(((linearEmissions - circularEmissions) / linearEmissions) * 100)}% reduction in carbon footprint
           </span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Circularity Benefits:</span>
+        <div className="flex flex-col sm:flex-row sm:justify-between text-sm">
+          <span className="text-gray-600 mb-1 sm:mb-0">Circularity Benefits:</span>
           <span className="font-medium text-blue-600">
-            {results.circularityIndex} points achieved
+            {results.circularityIndex} points achieved on the circularity index
           </span>
         </div>
       </div>
