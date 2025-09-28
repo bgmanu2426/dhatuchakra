@@ -123,7 +123,7 @@ export function AboutPage() {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Why Circular LCA Matters</h3>
               <div className="space-y-4 text-sm text-gray-700">
                 <p>
-                  Traditional linear models follow a "take-make-dispose" approach that depletes 
+                  Traditional linear models follow a &quot;take-make-dispose&quot; approach that depletes 
                   natural resources and generates waste. Circular economy principles aim to:
                 </p>
                 <ul className="space-y-2">

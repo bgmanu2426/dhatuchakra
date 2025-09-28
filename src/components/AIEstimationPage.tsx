@@ -8,7 +8,6 @@ export function AIEstimationPage() {
   const router = useRouter();
   const { aiEstimations, generateAIEstimations, updateAssessmentData } = useAssessment();
   const [acceptedEstimations, setAcceptedEstimations] = useState<string[]>([]);
-  const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +26,6 @@ export function AIEstimationPage() {
   };
 
   const handleOverride = (parameter: string, value: string) => {
-    setOverrides(prev => ({ ...prev, [parameter]: value }));
     updateAssessmentData({ [parameter.toLowerCase()]: value });
   };
 
@@ -78,7 +76,7 @@ export function AIEstimationPage() {
                 <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-gray-900 mb-2">All Parameters Provided</h2>
                 <p className="text-gray-600 mb-6">
-                  Great! You've provided all necessary information. Ready to calculate results.
+                  Great! You have provided all necessary information. Ready to calculate results.
                 </p>
                 <button
                   onClick={handleContinue}
