@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAssessment } from '../context/AssessmentContext';
 import { ArrowLeft, Download, Printer, Mail } from 'lucide-react';
@@ -10,25 +10,15 @@ import { ComparisonChart } from './ui/ComparisonChart';
 import { SankeyDiagram } from './ui/SankeyDiagram';
 
 export function ReportPage() {
-  const { assessmentData } = useAssessment();
+  const { assessmentData, results, calculateResults } = useAssessment();
   const [isGenerating, setIsGenerating] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // Mock results data
-  const results = {
-    carbonFootprint: 12.5,
-    energyConsumption: 45.8,
-    waterUsage: 125.3,
-    circularityIndex: 72,
-    recycledContent: 35,
-    wasteGenerated: 2.1,
-    resourceEfficiency: 68,
-    recommendations: [
-      "Switch to renewable energy sources to reduce carbon footprint by 23%",
-      "Increase recycled content to 50% for better circularity",
-      "Optimize transport routes to reduce emissions by 8%"
-    ]
-  };
+  useEffect(() => {
+    if (assessmentData.metalType && !results) {
+      calculateResults();
+    }
+  }, [assessmentData, results, calculateResults]);
 
   const generatePDF = async () => {
     if (!reportRef.current) return;
@@ -94,6 +84,17 @@ export function ReportPage() {
           >
             Start Assessment
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!results) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mb-4"></div>
+          <p className="text-gray-700">Generating your detailed report...</p>
         </div>
       </div>
     );

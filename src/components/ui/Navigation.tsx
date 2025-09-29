@@ -13,15 +13,11 @@ export function Navigation() {
   // Navigation links based on authentication state
   const navItems: { path: string; label: string }[] = user
     ? [
-        { path: '/input', label: 'New Assessment' },
-        { path: '/results', label: 'Results' },
-        { path: '/report', label: 'Reports' },
-        { path: '/about', label: 'About' },
+        { path: '/input', label: 'Assessment' },
       ]
     : [
         { path: '/login', label: 'Login' },
         { path: '/signup', label: 'Sign up' },
-        { path: '/about', label: 'About' },
       ];
 
   const isActive = (path: string) => pathname === path;

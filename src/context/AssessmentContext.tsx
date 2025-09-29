@@ -19,9 +19,12 @@ export interface AIEstimation {
 
 export interface Results {
   carbonFootprint: number;
-  recycledContent: number;
-  resourceEfficiency: number;
+  energyConsumption: number;
+  waterUsage: number;
   circularityIndex: number;
+  recycledContent: number;
+  wasteGenerated: number;
+  resourceEfficiency: number;
   recommendations: string[];
 }
 
@@ -86,20 +89,29 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
 
     const carbonFootprint = baseEmissions * productionMultiplier * energyMultiplier * transportMultiplier;
     const recycledContent = assessmentData.productionRoute === 'Recycled' ? 85 : 15;
-    const resourceEfficiency = 100 - (carbonFootprint / baseEmissions) * 50;
+    const resourceEfficiency = Math.max(0, 100 - (carbonFootprint / baseEmissions) * 50);
     const circularityIndex = calculateCircularityIndex(assessmentData);
+    const energyConsumption = estimateEnergyConsumption(assessmentData, carbonFootprint);
+    const waterUsage = estimateWaterUsage(assessmentData, carbonFootprint);
+    const wasteGenerated = estimateWasteGenerated(assessmentData);
 
     const recommendations = generateRecommendations(assessmentData, {
       carbonFootprint,
+      energyConsumption,
+      waterUsage,
       recycledContent,
       resourceEfficiency,
-      circularityIndex
+      circularityIndex,
+      wasteGenerated
     });
 
     setResults({
       carbonFootprint: Math.round(carbonFootprint),
+      energyConsumption: Math.round(energyConsumption * 10) / 10,
+      waterUsage: Math.round(waterUsage * 10) / 10,
       recycledContent: Math.round(recycledContent),
-      resourceEfficiency: Math.round(Math.max(0, resourceEfficiency)),
+      wasteGenerated: Math.round(wasteGenerated * 10) / 10,
+      resourceEfficiency: Math.round(resourceEfficiency),
       circularityIndex: Math.round(circularityIndex),
       recommendations
     });
@@ -207,5 +219,92 @@ function generateRecommendations(data: AssessmentData, results: Omit<Results, 'r
     recommendations.push('Focus on circular design principles to achieve better sustainability scores');
   }
 
+  if (results.energyConsumption > 60) {
+    recommendations.push('Invest in energy-efficient equipment or heat recovery to lower overall consumption');
+  }
+
+  if (results.waterUsage > 140) {
+    recommendations.push('Introduce closed-loop water systems to reduce freshwater demand');
+  }
+
+  if (results.wasteGenerated > 3) {
+    recommendations.push('Adopt lean manufacturing and scrap recycling to minimize waste outputs');
+  }
+
   return recommendations;
+}
+
+function estimateEnergyConsumption(data: AssessmentData, carbonFootprint: number): number {
+  const baseEnergyMap: Record<string, number> = {
+    'Aluminium': 65,
+    'Copper': 55,
+    'Lithium': 80,
+  };
+
+  let energy = baseEnergyMap[data.metalType] ?? 50;
+
+  if (data.productionRoute === 'Recycled') {
+    energy *= 0.7;
+  }
+
+  if (data.energySource === 'Renewable') {
+    energy *= 0.85;
+  } else if (data.energySource === 'Coal') {
+    energy *= 1.15;
+  } else if (data.energySource === 'Hydro') {
+    energy *= 0.9;
+  }
+
+  if (data.transportMode === 'Air') {
+    energy *= 1.05;
+  }
+
+  // Normalize slightly using carbon footprint scale
+  const carbonFactor = Math.min(Math.max(carbonFootprint / 10000, 0.8), 1.2);
+  return energy * carbonFactor;
+}
+
+function estimateWaterUsage(data: AssessmentData, carbonFootprint: number): number {
+  const baseWaterMap: Record<string, number> = {
+    'Aluminium': 150,
+    'Copper': 120,
+    'Lithium': 180,
+  };
+
+  let water = baseWaterMap[data.metalType] ?? 110;
+
+  if (data.productionRoute === 'Recycled') {
+    water *= 0.75;
+  }
+
+  if (data.energySource === 'Coal') {
+    water *= 1.1;
+  } else if (data.energySource === 'Renewable') {
+    water *= 0.9;
+  }
+
+  if (data.endOfLife === 'Recycle') {
+    water *= 0.95;
+  }
+
+  const footprintScaling = Math.min(Math.max(carbonFootprint / 8000, 0.7), 1.3);
+  return water * footprintScaling;
+}
+
+function estimateWasteGenerated(data: AssessmentData): number {
+  let waste = 2.2;
+
+  if (data.productionRoute === 'Recycled') {
+    waste *= 0.6;
+  }
+
+  if (data.endOfLife === 'Recycle' || data.endOfLife === 'Reuse') {
+    waste *= 0.8;
+  }
+
+  if (data.transportMode === 'Air') {
+    waste *= 1.1;
+  }
+
+  return waste;
 }

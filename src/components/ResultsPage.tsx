@@ -1,40 +1,33 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAssessment } from '../context/AssessmentContext';
-import { ArrowLeft, Download, Share2, Target, Leaf, Zap, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Target, Leaf, Zap, TrendingUp, MessageCircle, Send, X, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { MetricsCard } from './ui/MetricsCard';
 import { ComparisonChart } from './ui/ComparisonChart';
 import { SankeyDiagram } from './ui/SankeyDiagram';
-import toast from 'react-hot-toast';
+
+type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 export function ResultsPage() {
-  const { assessmentData } = useAssessment();
+  const { assessmentData, results: contextResults, calculateResults } = useAssessment();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
-  // Mock results data - in a real app, this would come from your assessment API
-  const results = {
-    carbonFootprint: 12.5, // kg CO2 eq
-    energyConsumption: 45.8, // MJ
-    waterUsage: 125.3, // L
-    circularityIndex: 72, // percentage
-    recycledContent: 35, // percentage
-    wasteGenerated: 2.1, // kg
-    resourceEfficiency: 68, // percentage
-    recommendations: [
-      "Switch to renewable energy sources to reduce carbon footprint by 23%",
-      "Increase recycled content to 50% for better circularity",
-      "Optimize transport routes to reduce emissions by 8%"
-    ]
-  };
+  useEffect(() => {
+    if (assessmentData.metalType && !contextResults) {
+      calculateResults();
+    }
+  }, [assessmentData, contextResults, calculateResults]);
 
-  const handleExport = () => {
-    toast.success('Results exported successfully');
-  };
-
-  const handleShare = () => {
-    toast.success('Results shared successfully');
-  };
+  const results = contextResults;
 
   if (!assessmentData.metalType) {
     return (
@@ -52,6 +45,70 @@ export function ResultsPage() {
       </div>
     );
   }
+
+  if (!results) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mb-4"></div>
+          <p className="text-gray-700">Preparing your assessment results...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const conversationHint =
+    "Ask follow-up questions like 'How can I reduce water usage further?' or 'Which supply-chain change matters most?'.";
+
+  const handleSend = async () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+
+    const nextMessages: ChatMessage[] = [...messages, { role: 'user', content: trimmed }];
+    setMessages(nextMessages);
+    setChatInput('');
+    setIsSending(true);
+
+    try {
+      const response = await fetch('/api/insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: nextMessages,
+          results,
+          assessment: assessmentData,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Unable to generate insights.');
+      }
+
+      const data = await response.json();
+      if (!data.reply) {
+        throw new Error('No response received from Gemini.');
+      }
+
+      setMessages([...nextMessages, { role: 'assistant', content: data.reply }]);
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : 'Failed to contact Gemini API');
+      setMessages(prev => prev.slice(0, -1));
+      setChatInput(trimmed);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!isSending) {
+      handleSend();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -76,7 +133,7 @@ export function ResultsPage() {
               href="/report"
               className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm"
             >
-              View Report
+              Generate Report
             </Link>
           </div>
         </div>
@@ -233,22 +290,84 @@ export function ResultsPage() {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+        <div className="mt-10">
           <button
-            onClick={handleExport}
-            className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            onClick={() => setShowChat(prev => !prev)}
+            className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Export Results
+            <MessageCircle className="h-5 w-5 mr-2" />
+            Get more insights
           </button>
-          <button
-            onClick={handleShare}
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share Results
-          </button>
+
+          {showChat && (
+            <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Gemini Insights Assistant</h3>
+                  <p className="text-sm text-gray-600">{conversationHint}</p>
+                </div>
+                <button
+                  onClick={() => setShowChat(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                  aria-label="Close insights assistant"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="max-h-80 overflow-y-auto px-6 py-4 space-y-4">
+                {messages.length === 0 && (
+                  <div className="text-sm text-gray-600 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-4 py-3">
+                    Ready when you are. Share your questions about these results to uncover more nuanced sustainability opportunities.
+                  </div>
+                )}
+                {messages.map((message, index) => (
+                  <div
+                    key={`${message.role}-${index}`}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
+                        message.role === 'user'
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      {message.content}
+                    </div>
+                  </div>
+                ))}
+                {isSending && (
+                  <div className="flex justify-start">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-100 rounded-lg px-3 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Generating insights...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleSubmit} className="border-t border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
+                <div className="flex items-end space-x-3">
+                  <textarea
+                    value={chatInput}
+                    onChange={(event) => setChatInput(event.target.value)}
+                    rows={2}
+                    placeholder="Ask a question about your results..."
+                    className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSending || chatInput.trim().length === 0}
+                    className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Send message"
+                  >
+                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>

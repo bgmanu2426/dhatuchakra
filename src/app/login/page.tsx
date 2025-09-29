@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,6 +10,7 @@ export default function Page() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { refresh } = useAuth();
+  const router = useRouter();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +32,9 @@ export default function Page() {
       
       toast.success(`Welcome back, ${data.user.name}!`);
       await refresh(); // Refresh auth context
-      // Let middleware handle the redirect based on user role
-      window.location.href = '/input';
+  const role = typeof data?.user?.role === 'string' ? data.user.role.toLowerCase() : '';
+  const destination = role === 'admin' ? '/admin' : '/input';
+  router.replace(destination);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       toast.error(msg);

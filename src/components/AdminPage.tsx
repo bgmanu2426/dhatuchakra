@@ -1,14 +1,19 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  FileSpreadsheet, 
-  Settings, 
+import {
+  Users,
+  FileSpreadsheet,
+  Settings,
   User,
   Trash2,
   Edit,
   Plus,
-  Search
+  Search,
+  Database,
+  Brain,
+  Upload,
+  Sparkles,
+  Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -28,10 +33,30 @@ type Assessment = {
   status: 'completed' | 'in-progress' | 'draft';
 };
 
-export function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'users' | 'assessments' | 'settings'>('users');
+type Dataset = {
+  id: string;
+  name: string;
+  version: string;
+  records: number;
+  updatedAt: string;
+};
+
+type AIModel = {
+  id: string;
+  name: string;
+  accuracy: number;
+  status: 'Active' | 'Training' | 'Inactive';
+  updatedAt: string;
+};
+
+type TabKey = 'datasets' | 'aiModels' | 'users' | 'assessments' | 'settings';
+
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<TabKey>('datasets');
   const [users, setUsers] = useState<User[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [aiModels, setAiModels] = useState<AIModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -55,11 +80,19 @@ export function AdminPage() {
           { id: '104', name: 'Iron Ore Processing', createdBy: 'Sneha Gupta', createdAt: '2023-05-02', status: 'draft' },
           { id: '105', name: 'Zinc Production Analysis', createdBy: 'Vikram Singh', createdAt: '2023-04-28', status: 'in-progress' },
         ]);
-        
+        setDatasets([
+          { id: 'd1', name: 'Metal Emissions Database', version: 'v2.1', records: 2345, updatedAt: '2024-01-15' },
+          { id: 'd2', name: 'Energy Grid Factors', version: 'v1.8', records: 456, updatedAt: '2024-01-12' },
+          { id: 'd3', name: 'Transport Emissions', version: 'v3.0', records: 789, updatedAt: '2024-01-10' },
+        ]);
+        setAiModels([
+          { id: 'm1', name: 'Carbon Footprint Predictor', accuracy: 92.5, status: 'Active', updatedAt: '2024-01-14' },
+          { id: 'm2', name: 'Circularity Optimizer', accuracy: 88.3, status: 'Training', updatedAt: '2024-01-13' },
+          { id: 'm3', name: 'Resource Efficiency Model', accuracy: 90.1, status: 'Active', updatedAt: '2024-01-11' },
+        ]);
         setIsLoading(false);
       }, 1000);
     };
-    
     fetchData();
   }, []);
 
@@ -91,15 +124,89 @@ export function AdminPage() {
     toast.success('Add new assessment modal opened');
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleUploadDataset = () => {
+    toast.success('Upload dataset workflow started');
+  };
+
+  const handleEditDataset = (datasetId: string) => {
+    toast.success(`Edit dataset with ID: ${datasetId}`);
+  };
+
+  const handleDeleteDataset = (datasetId: string) => {
+    setDatasets(datasets.filter(dataset => dataset.id !== datasetId));
+    toast.success('Dataset deleted successfully');
+  };
+
+  const handleDownloadDataset = (datasetId: string) => {
+    toast.success(`Downloading dataset with ID: ${datasetId}`);
+  };
+
+  const handleTrainNewModel = () => {
+    toast.success('Model training pipeline initiated');
+  };
+
+  const handleDeployModel = (modelId: string) => {
+    setAiModels(models =>
+      models.map(model =>
+        model.id === modelId ? { ...model, status: 'Active' } : model
+      )
+    );
+    toast.success('Model deployment started');
+  };
+
+  const handleConfigureModel = (modelId: string) => {
+    toast.success(`Configure model with ID: ${modelId}`);
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const matchesQuery = (value: string) =>
+    value.toLowerCase().includes(normalizedQuery);
+
+  const filteredUsers = users.filter(user =>
+    normalizedQuery === '' ||
+    matchesQuery(user.name) ||
+    matchesQuery(user.email) ||
+    matchesQuery(user.role)
   );
 
-  const filteredAssessments = assessments.filter(assessment => 
-    assessment.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    assessment.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredAssessments = assessments.filter(assessment =>
+    normalizedQuery === '' ||
+    matchesQuery(assessment.name) ||
+    matchesQuery(assessment.createdBy) ||
+    matchesQuery(assessment.status)
   );
+
+  const filteredDatasets = datasets.filter(dataset =>
+    normalizedQuery === '' ||
+    matchesQuery(dataset.name) ||
+    matchesQuery(dataset.version)
+  );
+
+  const filteredAiModels = aiModels.filter(model =>
+    normalizedQuery === '' ||
+    matchesQuery(model.name) ||
+    matchesQuery(model.status)
+  );
+
+  const tabs = [
+    { key: 'datasets', label: 'Datasets', icon: Database },
+    { key: 'aiModels', label: 'AI Models', icon: Brain },
+    { key: 'users', label: 'Users', icon: Users },
+    { key: 'assessments', label: 'Assessments', icon: FileSpreadsheet },
+    { key: 'settings', label: 'Settings', icon: Settings },
+  ] as const satisfies Array<{ key: TabKey; label: string; icon: typeof Users }>;
+
+  const searchPlaceholderMap: Record<TabKey, string> = {
+    datasets: 'Search datasets...',
+    aiModels: 'Search AI models...',
+    users: 'Search users...',
+    assessments: 'Search assessments...',
+    settings: 'Search settings...',
+  };
+
+  const showSearch = activeTab !== 'settings';
+  const searchPlaceholder = searchPlaceholderMap[activeTab];
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -110,63 +217,129 @@ export function AdminPage() {
     }
   };
 
+  const getModelStatusStyles = (status: AIModel['status']) => {
+    switch (status) {
+      case 'Active':
+        return {
+          badge: 'bg-green-50 text-green-700 border border-green-100',
+          text: 'text-green-600'
+        };
+      case 'Training':
+        return {
+          badge: 'bg-amber-50 text-amber-700 border border-amber-100',
+          text: 'text-amber-600'
+        };
+      default:
+        return {
+          badge: 'bg-gray-100 text-gray-600 border border-gray-200',
+          text: 'text-gray-500'
+        };
+    }
+  };
+
+  const activeTabLabel = tabs.find(tab => tab.key === activeTab)?.label ?? 'Items';
+
+  const primaryActionButton = (() => {
+    switch (activeTab) {
+      case 'datasets':
+        return (
+          <button
+            onClick={handleUploadDataset}
+            className="flex items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-green-700"
+          >
+            <Upload size={16} />
+            <span>Upload Dataset</span>
+          </button>
+        );
+      case 'aiModels':
+        return (
+          <button
+            onClick={handleTrainNewModel}
+            className="flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-700"
+          >
+            <Sparkles size={16} />
+            <span>Train New Model</span>
+          </button>
+        );
+      case 'users':
+        return (
+          <button
+            onClick={handleAddUser}
+            className="flex items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-green-700"
+          >
+            <Plus size={16} />
+            <span>Add User</span>
+          </button>
+        );
+      case 'assessments':
+        return (
+          <button
+            onClick={handleAddAssessment}
+            className="flex items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-green-700"
+          >
+            <Plus size={16} />
+            <span>Add Assessment</span>
+          </button>
+        );
+      default:
+        return null;
+    }
+  })();
+
+  const showToolbar = showSearch || Boolean(primaryActionButton);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      <h1 className="text-3xl font-bold text-gray-700 mb-6">Admin Dashboard</h1>
       
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6">
-        <button 
-          className={`py-3 px-6 font-medium ${activeTab === 'users' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-          onClick={() => setActiveTab('users')}
-        >
-          <div className="flex items-center gap-2">
-            <Users size={18} />
-            <span>Users</span>
-          </div>
-        </button>
-        <button 
-          className={`py-3 px-6 font-medium ${activeTab === 'assessments' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-          onClick={() => setActiveTab('assessments')}
-        >
-          <div className="flex items-center gap-2">
-            <FileSpreadsheet size={18} />
-            <span>Assessments</span>
-          </div>
-        </button>
-        <button 
-          className={`py-3 px-6 font-medium ${activeTab === 'settings' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <div className="flex items-center gap-2">
-            <Settings size={18} />
-            <span>Settings</span>
-          </div>
-        </button>
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-gray-200">
+        {tabs.map(({ key, label, icon: Icon }) => {
+          const isActive = activeTab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${
+                isActive
+                  ? 'border-green-600 text-green-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-200 hover:text-gray-700'
+              }`}
+            >
+              <Icon
+                size={18}
+                className={isActive ? 'text-green-600' : 'text-gray-400'}
+              />
+              <span>{label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Search bar and actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div className="relative w-full sm:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder={`Search ${activeTab}...`}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {showToolbar && (
+        <div className="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {showSearch && (
+            <div className="relative w-full sm:w-96">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                aria-label={`Search ${activeTabLabel.toLowerCase()}`}
+                placeholder={searchPlaceholder}
+                className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-4 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
+          {primaryActionButton && (
+            <div className="flex w-full justify-end sm:w-auto">
+              {primaryActionButton}
+            </div>
+          )}
         </div>
-        <button
-          onClick={activeTab === 'users' ? handleAddUser : handleAddAssessment}
-          className="flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200"
-        >
-          <Plus size={16} />
-          <span>Add {activeTab === 'users' ? 'User' : activeTab === 'assessments' ? 'Assessment' : 'Setting'}</span>
-        </button>
-      </div>
+      )}
 
       {/* Content based on active tab */}
       {isLoading ? (
@@ -175,6 +348,150 @@ export function AdminPage() {
         </div>
       ) : (
         <>
+          {activeTab === 'datasets' && (
+            <div className="overflow-hidden rounded-lg bg-white shadow">
+              <div className="flex flex-col gap-2 border-b border-gray-100 px-6 py-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Dataset Management</h2>
+                  <p className="text-sm text-gray-500">Manage datasets, versions, and availability for lifecycle assessments.</p>
+                </div>
+                <span className="text-sm font-medium text-gray-400">
+                  {filteredDatasets.length} {filteredDatasets.length === 1 ? 'dataset' : 'datasets'}
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Dataset Name
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Version
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Records
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Updated
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {filteredDatasets.map((dataset) => (
+                      <tr key={dataset.id} className="hover:bg-gray-50">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                          {dataset.name}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{dataset.version}</td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{dataset.records.toLocaleString()}</td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{dataset.updatedAt}</td>
+                        <td className="whitespace-nowrap px-6 py-4 text-right">
+                          <div className="flex justify-end gap-3 text-sm font-medium">
+                            <button
+                              onClick={() => handleEditDataset(dataset.id)}
+                              className="flex items-center gap-1 text-green-600 transition hover:text-green-700"
+                            >
+                              <Edit size={16} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDownloadDataset(dataset.id)}
+                              className="flex items-center gap-1 text-blue-600 transition hover:text-blue-700"
+                            >
+                              <Download size={16} />
+                              Download
+                            </button>
+                            <button
+                              onClick={() => handleDeleteDataset(dataset.id)}
+                              className="flex items-center gap-1 text-red-600 transition hover:text-red-700"
+                            >
+                              <Trash2 size={16} />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredDatasets.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
+                          No datasets match your search.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'aiModels' && (
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">AI Model Management</h2>
+                  <p className="text-sm text-gray-500">Monitor model performance, rollout status, and retraining needs.</p>
+                </div>
+                <span className="text-sm font-medium text-gray-400">
+                  {filteredAiModels.length} {filteredAiModels.length === 1 ? 'model' : 'models'}
+                </span>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredAiModels.map((model) => {
+                  const statusStyles = getModelStatusStyles(model.status);
+                  return (
+                    <div
+                      key={model.id}
+                      className="flex flex-col justify-between rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between">
+                          <h3 className="text-lg font-semibold text-gray-800">{model.name}</h3>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles.badge}`}>
+                            {model.status}
+                          </span>
+                        </div>
+                        <div className="mt-4 space-y-3 text-sm text-gray-600">
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-500">Accuracy</span>
+                            <span className="font-semibold text-gray-900">{model.accuracy.toFixed(1)}%</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-500">Updated</span>
+                            <span>{model.updatedAt}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <button
+                          onClick={() => handleDeployModel(model.id)}
+                          className="flex min-w-[110px] items-center justify-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+                        >
+                          Deploy
+                        </button>
+                        <button
+                          onClick={() => handleConfigureModel(model.id)}
+                          className="flex min-w-[110px] items-center justify-center gap-2 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
+                        >
+                          Configure
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredAiModels.length === 0 && (
+                  <div className="col-span-full rounded-lg border border-dashed border-gray-200 p-10 text-center text-sm text-gray-500">
+                    No AI models match your search.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'users' && (
             <div className="overflow-x-auto bg-white rounded-lg shadow">
               <table className="min-w-full divide-y divide-gray-200">
