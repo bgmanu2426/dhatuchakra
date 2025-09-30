@@ -13,6 +13,80 @@ type ChatMessage = {
   content: string;
 };
 
+function formatInlineText(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <span key={index} className="font-semibold text-gray-900">
+          {part.slice(2, -2)}
+        </span>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function renderAssistantContent(content: string) {
+  const blocks = content.trim().split(/\n{2,}/);
+
+  return blocks.map((block, blockIndex) => {
+    const rawLines = block.split('\n').map(line => line.trim()).filter(Boolean);
+
+    if (!rawLines.length) {
+      return null;
+    }
+
+    const isBulleted = rawLines.every(line => /^[-*•]/.test(line));
+    const isNumbered = rawLines.every(line => /^\d+[\.\)]\s+/.test(line));
+
+    if (isBulleted || isNumbered) {
+      if (isNumbered) {
+        return (
+          <ol
+            key={`list-${blockIndex}`}
+            className="text-sm text-gray-800 leading-relaxed list-decimal ml-5 space-y-2"
+          >
+            {rawLines.map((line, lineIndex) => {
+              const cleaned = line.replace(/^\d+[\.\)]\s*/, '');
+              return (
+                <li key={`list-item-${blockIndex}-${lineIndex}`} className="pl-1">
+                  {formatInlineText(cleaned)}
+                </li>
+              );
+            })}
+          </ol>
+        );
+      }
+
+      return (
+        <ul
+          key={`list-${blockIndex}`}
+          className="text-sm text-gray-800 leading-relaxed space-y-2"
+        >
+          {rawLines.map((line, lineIndex) => {
+            const cleaned = line.replace(/^[-*•]\s*/, '');
+            return (
+              <li
+                key={`list-item-${blockIndex}-${lineIndex}`}
+                className="flex gap-2"
+              >
+                <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-green-500"></span>
+                <span className="flex-1">{formatInlineText(cleaned)}</span>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    return (
+      <p key={`para-${blockIndex}`} className="text-sm text-gray-800 leading-relaxed mb-2 last:mb-0">
+        {formatInlineText(block)}
+      </p>
+    );
+  });
+}
+
 export function ResultsPage() {
   const { assessmentData, results: contextResults, calculateResults } = useAssessment();
   const [activeTab, setActiveTab] = useState('overview');
@@ -60,8 +134,15 @@ export function ResultsPage() {
   const conversationHint =
     "Ask follow-up questions like 'How can I reduce water usage further?' or 'Which supply-chain change matters most?'.";
 
-  const handleSend = async () => {
-    const trimmed = chatInput.trim();
+  const suggestedPrompts = [
+    `What if we switch from ${assessmentData.energySource} to nuclear energy?`,
+    `Which recommendation should we prioritize to boost circularity beyond ${results.circularityIndex}?`,
+    `How can we cut water usage below ${results.waterUsage} litres per batch?`
+  ];
+
+  const handleSend = async (messageOverride?: string) => {
+    const rawInput = messageOverride ?? chatInput;
+    const trimmed = rawInput.trim();
     if (!trimmed) return;
 
     const nextMessages: ChatMessage[] = [...messages, { role: 'user', content: trimmed }];
@@ -107,6 +188,21 @@ export function ResultsPage() {
     event.preventDefault();
     if (!isSending) {
       handleSend();
+    }
+  };
+
+  const handleSuggestedPrompt = (prompt: string) => {
+    if (isSending) return;
+    setChatInput(prompt);
+    handleSend(prompt);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (!isSending) {
+        handleSend();
+      }
     }
   };
 
@@ -315,12 +411,21 @@ export function ResultsPage() {
                 </button>
               </div>
 
+              <div className="px-6 pt-4 flex flex-wrap gap-2 border-b border-gray-100 bg-gray-50">
+                {suggestedPrompts.map((prompt, index) => (
+                  <button
+                    key={`prompt-${index}`}
+                    type="button"
+                    onClick={() => handleSuggestedPrompt(prompt)}
+                    disabled={isSending}
+                    className="text-xs sm:text-sm px-3 py-2 rounded-full border border-green-300 bg-white text-green-700 hover:bg-green-50 transition-colors disabled:opacity-60"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+
               <div className="max-h-80 overflow-y-auto px-6 py-4 space-y-4">
-                {messages.length === 0 && (
-                  <div className="text-sm text-gray-600 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-4 py-3">
-                    Ready when you are. Share your questions about these results to uncover more nuanced sustainability opportunities.
-                  </div>
-                )}
                 {messages.map((message, index) => (
                   <div
                     key={`${message.role}-${index}`}
@@ -330,10 +435,12 @@ export function ResultsPage() {
                       className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
                         message.role === 'user'
                           ? 'bg-green-600 text-white'
-                          : 'bg-gray-100 text-gray-900'
+                          : 'bg-gray-100 text-gray-900 border border-gray-200'
                       }`}
                     >
-                      {message.content}
+                      {message.role === 'assistant'
+                        ? renderAssistantContent(message.content)
+                        : message.content}
                     </div>
                   </div>
                 ))}
@@ -352,6 +459,7 @@ export function ResultsPage() {
                   <textarea
                     value={chatInput}
                     onChange={(event) => setChatInput(event.target.value)}
+                    onKeyDown={handleKeyDown}
                     rows={2}
                     placeholder="Ask a question about your results..."
                     className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"

@@ -32,8 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await fetch('/api/auth/logout', { method: 'POST' });
       await refresh();
       toast.success('Logged out successfully');
-      // Redirect to home page after logout
-      window.location.href = '/';
+      // Redirect to login page after logout
+      window.location.href = '/login';
     } catch (error) {
       toast.error('Error logging out');
       console.error('Logout error:', error);
