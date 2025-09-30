@@ -146,7 +146,7 @@ export function InputPage() {
                 End-of-Life Option *
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Recycle', 'Reuse', 'Landfill', 'Incineration'].map((option) => (
+                {['Recycle', 'Reuse', 'Landfill'].map((option) => (
                   <label key={option} className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"

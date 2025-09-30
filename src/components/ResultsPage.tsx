@@ -89,13 +89,13 @@ export function ResultsPage() {
 
       const data = await response.json();
       if (!data.reply) {
-        throw new Error('No response received from Gemini.');
+        throw new Error('No response received from AI Agent.');
       }
 
       setMessages([...nextMessages, { role: 'assistant', content: data.reply }]);
     } catch (error) {
       console.error(error);
-      toast.error(error instanceof Error ? error.message : 'Failed to contact Gemini API');
+      toast.error(error instanceof Error ? error.message : 'Failed to contact AI Agent API');
       setMessages(prev => prev.slice(0, -1));
       setChatInput(trimmed);
     } finally {
@@ -303,7 +303,7 @@ export function ResultsPage() {
             <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Gemini Insights Assistant</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">AI Insights Assistant</h3>
                   <p className="text-sm text-gray-600">{conversationHint}</p>
                 </div>
                 <button

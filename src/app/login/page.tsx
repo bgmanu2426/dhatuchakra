@@ -12,6 +12,17 @@ export default function Page() {
   const { refresh } = useAuth();
   const router = useRouter();
 
+  const fillCredentials = (type: 'user' | 'admin') => {
+    if (loading) return;
+    if (type === 'user') {
+      setEmail('test@example.com');
+      setPassword('test123');
+    } else {
+      setEmail('admin@example.com');
+      setPassword('admin123');
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -62,8 +73,26 @@ export default function Page() {
             </div>
             <button type="submit" disabled={loading}
               className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50">
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? 'Processing…' : 'Login'}
             </button>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => fillCredentials('user')}
+                disabled={loading}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
+              >
+                User
+              </button>
+              <button
+                type="button"
+                onClick={() => fillCredentials('admin')}
+                disabled={loading}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-emerald-700 text-emerald-800 rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50"
+              >
+                Admin
+              </button>
+            </div>
           </form>
           <p className="mt-6 text-sm text-gray-600">Don&apos;t have an account? <Link href="/signup" className="text-green-700 hover:text-green-800 font-medium">Sign up</Link></p>
         </div>

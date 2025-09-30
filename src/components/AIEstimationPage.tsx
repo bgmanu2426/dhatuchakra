@@ -64,7 +64,6 @@ export function AIEstimationPage() {
   };
 
   const handleRestart = () => {
-  toast('Restarting AI estimation...');
     startEstimation();
   };
 

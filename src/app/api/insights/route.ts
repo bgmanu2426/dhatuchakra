@@ -137,12 +137,12 @@ export async function POST(request: Request) {
     const reply = completion.choices?.[0]?.message?.content;
 
     if (!reply) {
-      return NextResponse.json({ error: 'Gemini returned an empty response.' }, { status: 502 });
+      return NextResponse.json({ error: 'Ai Agent returned an empty response.' }, { status: 502 });
     }
 
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error('Gemini insights error:', error);
+    console.error('Ai Agent insights error:', error);
     return NextResponse.json({ error: 'Failed to generate insights.' }, { status: 500 });
   }
 }
