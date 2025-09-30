@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAssessment } from '../context/AssessmentContext';
-import { ArrowLeft, Target, Leaf, Zap, TrendingUp, MessageCircle, Send, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Target, Leaf, Zap, TrendingUp, Send, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MetricsCard } from './ui/MetricsCard';
 import { ComparisonChart } from './ui/ComparisonChart';
@@ -90,7 +90,6 @@ function renderAssistantContent(content: string) {
 export function ResultsPage() {
   const { assessmentData, results: contextResults, calculateResults } = useAssessment();
   const [activeTab, setActiveTab] = useState('overview');
-  const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -387,95 +386,76 @@ export function ResultsPage() {
         )}
 
         <div className="mt-10">
-          <button
-            onClick={() => setShowChat(prev => !prev)}
-            className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-          >
-            <MessageCircle className="h-5 w-5 mr-2" />
-            Get more insights
-          </button>
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">AI Insights Assistant</h3>
+              <p className="text-sm text-gray-600">{conversationHint}</p>
+            </div>
 
-          {showChat && (
-            <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">AI Insights Assistant</h3>
-                  <p className="text-sm text-gray-600">{conversationHint}</p>
-                </div>
+            <div className="px-6 pt-4 flex flex-wrap gap-2 border-b border-gray-100 bg-gray-50">
+              {suggestedPrompts.map((prompt, index) => (
                 <button
-                  onClick={() => setShowChat(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                  aria-label="Close insights assistant"
+                  key={`prompt-${index}`}
+                  type="button"
+                  onClick={() => handleSuggestedPrompt(prompt)}
+                  disabled={isSending}
+                  className="text-xs sm:text-sm px-3 py-2 rounded-full border border-green-300 bg-white text-green-700 hover:bg-green-50 transition-colors disabled:opacity-60"
                 >
-                  <X className="h-5 w-5" />
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            <div className="max-h-80 overflow-y-auto px-6 py-4 space-y-4">
+              {messages.map((message, index) => (
+                <div
+                  key={`${message.role}-${index}`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
+                      message.role === 'user'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-900 border border-gray-200'
+                    }`}
+                  >
+                    {message.role === 'assistant'
+                      ? renderAssistantContent(message.content)
+                      : message.content}
+                  </div>
+                </div>
+              ))}
+              {isSending && (
+                <div className="flex justify-start">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-100 rounded-lg px-3 py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Generating insights...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSubmit} className="border-t border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
+              <div className="flex items-end space-x-3">
+                <textarea
+                  value={chatInput}
+                  onChange={(event) => setChatInput(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={2}
+                  placeholder="Ask a question about your results..."
+                  className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSending || chatInput.trim().length === 0}
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Send message"
+                >
+                  {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
-
-              <div className="px-6 pt-4 flex flex-wrap gap-2 border-b border-gray-100 bg-gray-50">
-                {suggestedPrompts.map((prompt, index) => (
-                  <button
-                    key={`prompt-${index}`}
-                    type="button"
-                    onClick={() => handleSuggestedPrompt(prompt)}
-                    disabled={isSending}
-                    className="text-xs sm:text-sm px-3 py-2 rounded-full border border-green-300 bg-white text-green-700 hover:bg-green-50 transition-colors disabled:opacity-60"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-
-              <div className="max-h-80 overflow-y-auto px-6 py-4 space-y-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={`${message.role}-${index}`}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
-                        message.role === 'user'
-                          ? 'bg-green-600 text-white'
-                          : 'bg-gray-100 text-gray-900 border border-gray-200'
-                      }`}
-                    >
-                      {message.role === 'assistant'
-                        ? renderAssistantContent(message.content)
-                        : message.content}
-                    </div>
-                  </div>
-                ))}
-                {isSending && (
-                  <div className="flex justify-start">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-100 rounded-lg px-3 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Generating insights...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <form onSubmit={handleSubmit} className="border-t border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
-                <div className="flex items-end space-x-3">
-                  <textarea
-                    value={chatInput}
-                    onChange={(event) => setChatInput(event.target.value)}
-                    onKeyDown={handleKeyDown}
-                    rows={2}
-                    placeholder="Ask a question about your results..."
-                    className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSending || chatInput.trim().length === 0}
-                    className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Send message"
-                  >
-                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+            </form>
+          </div>
         </div>
       </div>
     </div>

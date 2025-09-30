@@ -38,26 +38,52 @@ export function ComparisonChart({ results, assessmentData }: ComparisonChartProp
     labels: ['Carbon Footprint', 'Resource Consumption', 'Waste Generation'],
     datasets: [
       {
-        label: 'Linear Process',
-        data: [
-          linearEmissions * baselineFactor,
-          100,
-          85
-        ],
+        label: 'Linear - Carbon Footprint',
+        data: [linearEmissions * baselineFactor, null, null],
         backgroundColor: 'rgba(239, 68, 68, 0.8)',
         borderColor: 'rgba(239, 68, 68, 1)',
         borderWidth: 1,
+        yAxisID: 'yCarbon',
       },
       {
-        label: 'Current (Circular) Process',
-        data: [
-          circularEmissions,
-          100 - results.resourceEfficiency,
-          Math.max(0, 85 - results.circularityIndex)
-        ],
+        label: 'Circular - Carbon Footprint',
+        data: [circularEmissions, null, null],
         backgroundColor: 'rgba(34, 197, 94, 0.8)',
         borderColor: 'rgba(34, 197, 94, 1)',
         borderWidth: 1,
+        yAxisID: 'yCarbon',
+      },
+      {
+        label: 'Linear - Resource Consumption',
+        data: [null, 100, null],
+        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+        borderColor: 'rgba(239, 68, 68, 0.9)',
+        borderWidth: 1,
+        yAxisID: 'yPercent',
+      },
+      {
+        label: 'Circular - Resource Consumption',
+        data: [null, Math.max(0, 100 - results.resourceEfficiency), null],
+        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+        borderColor: 'rgba(34, 197, 94, 0.9)',
+        borderWidth: 1,
+        yAxisID: 'yPercent',
+      },
+      {
+        label: 'Linear - Waste Generation',
+        data: [null, null, 85],
+        backgroundColor: 'rgba(239, 68, 68, 0.4)',
+        borderColor: 'rgba(239, 68, 68, 0.7)',
+        borderWidth: 1,
+        yAxisID: 'yPercent',
+      },
+      {
+        label: 'Circular - Waste Generation',
+        data: [null, null, Math.max(0, 85 - results.circularityIndex)],
+        backgroundColor: 'rgba(34, 197, 94, 0.4)',
+        borderColor: 'rgba(34, 197, 94, 0.7)',
+        borderWidth: 1,
+        yAxisID: 'yPercent',
       },
     ],
   };
@@ -75,24 +101,52 @@ export function ComparisonChart({ results, assessmentData }: ComparisonChartProp
       tooltip: {
         callbacks: {
           label: function(context: import('chart.js').TooltipItem<'bar'>) {
+            const value = context.parsed.y ?? 0;
             let suffix = '';
-            if (context.dataIndex === 0) suffix = ' kg CO₂/ton';
-            else if (context.dataIndex === 1) suffix = '% resource use';
-            else suffix = '% waste generated';
-            
-            return String(context.dataset.label) + ': ' + context.parsed.y + suffix;
+            if (context.dataset.yAxisID === 'yCarbon') {
+              suffix = ' kg CO₂/ton';
+            } else if (context.dataIndex === 1) {
+              suffix = '% resource use';
+            } else {
+              suffix = '% waste generated';
+            }
+
+            return `${String(context.dataset.label)}: ${value}${suffix}`;
           },
         },
       },
     },
     scales: {
-      y: {
+      yCarbon: {
+        type: 'linear',
+        position: 'left',
         beginAtZero: true,
         grid: {
           color: 'rgba(0, 0, 0, 0.05)',
         },
         ticks: {
           color: '#6B7280',
+        },
+        title: {
+          display: true,
+          text: 'Emissions (kg CO₂/ton)',
+        },
+      },
+      yPercent: {
+        type: 'linear',
+        position: 'right',
+        beginAtZero: true,
+        suggestedMax: 100,
+        grid: {
+          drawOnChartArea: false,
+        },
+        ticks: {
+          color: '#6B7280',
+          callback: (value) => `${value}%`,
+        },
+        title: {
+          display: true,
+          text: 'Percent Change',
         },
       },
       x: {
