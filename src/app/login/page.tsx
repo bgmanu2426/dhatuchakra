@@ -45,7 +45,7 @@ export default function Page() {
       await refresh(); // Refresh auth context
   const role = typeof data?.user?.role === 'string' ? data.user.role.toLowerCase() : '';
   const destination = role === 'admin' ? '/admin' : '/input';
-  router.replace(destination);
+  router.push(destination);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       toast.error(msg);
