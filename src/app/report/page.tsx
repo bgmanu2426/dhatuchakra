@@ -5,25 +5,24 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { DashboardLoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
 export default function Page() {
-    const { user, loading } = useAuth();
+    const { user, loading, isLoggingOut } = useAuth();
     const router = useRouter();
     
     useEffect(() => {
-      if (!loading && !user) {
+      if (!loading && !user && !isLoggingOut) {
         toast.error('Please login to access this page');
         router.push('/login');
       } else if (!loading && user?.role !== 'user' && user?.role === 'admin') {
         toast.error('You do not have permission to access this page');
         router.push('/admin');
       }
-    }, [user, loading, router]);
+    }, [user, loading, isLoggingOut, router]);
   
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
-    </div>;
+    return <DashboardLoadingSkeleton />;
   }
   
   if (!user) return null;

@@ -9,6 +9,7 @@ interface AuthContextValue {
   loading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
+  isLoggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const refresh = async () => {
     try {
@@ -29,12 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      setIsLoggingOut(true);
       await fetch('/api/auth/logout', { method: 'POST' });
       await refresh();
       toast.success('Logged out successfully');
       // Redirect to login page after logout
       window.location.href = '/login';
     } catch (error) {
+      setIsLoggingOut(false);
       toast.error('Error logging out');
       console.error('Logout error:', error);
     }
@@ -45,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refresh, logout }}>
+    <AuthContext.Provider value={{ user, loading, refresh, logout, isLoggingOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { FormLoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
 export default function Page() {
   const [name, setName] = useState('');
@@ -39,6 +40,10 @@ export default function Page() {
     }
   };
 
+  if (loading) {
+    return <FormLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-md mx-auto px-4">
@@ -68,7 +73,7 @@ export default function Page() {
             </div>
             <button type="submit" disabled={loading}
               className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50">
-              {loading ? 'Creating…' : 'Create account'}
+              Create account
             </button>
           </form>
           <p className="mt-6 text-sm text-gray-600">Already have an account? <Link href="/login" className="text-green-700 hover:text-green-800 font-medium">Sign in</Link></p>

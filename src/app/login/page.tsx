@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import { FormLoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
 export default function Page() {
   const [email, setEmail] = useState('');
@@ -71,6 +72,10 @@ export default function Page() {
     // Don't reset loading on success - let the navigation happen
   };
 
+  if (loading) {
+    return <FormLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-md mx-auto px-4">
@@ -90,7 +95,7 @@ export default function Page() {
             </div>
             <button type="submit" disabled={loading}
               className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50">
-              {loading ? 'Processing…' : 'Login'}
+              Login
             </button>
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button

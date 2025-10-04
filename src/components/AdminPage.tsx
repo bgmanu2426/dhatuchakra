@@ -16,6 +16,7 @@ import {
   Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AdminDashboardSkeleton } from './ui/LoadingSkeleton';
 
 type User = {
   id: string;
@@ -343,9 +344,7 @@ export default function AdminPage() {
 
       {/* Content based on active tab */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
-        </div>
+        <AdminDashboardSkeleton />
       ) : (
         <>
           {activeTab === 'datasets' && (
