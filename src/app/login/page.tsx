@@ -41,17 +41,34 @@ export default function Page() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Login failed');
       
+      // Determine destination BEFORE refresh
+      const role = typeof data?.user?.role === 'string' ? data.user.role.toLowerCase() : '';
+      const destination = role === 'admin' ? '/admin' : '/input';
+      
       toast.success(`Welcome back, ${data.user.name}!`);
-      await refresh(); // Refresh auth context
-  const role = typeof data?.user?.role === 'string' ? data.user.role.toLowerCase() : '';
-  const destination = role === 'admin' ? '/admin' : '/input';
-  router.push(destination);
+      
+      // Refresh auth context but don't await it
+      refresh();
+      
+      // Small delay to ensure cookie/token is set
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Use replace instead of push to prevent back button issues
+      router.replace(destination);
+      
+      // Fallback: if router.replace fails, use hard navigation
+      setTimeout(() => {
+        if (window.location.pathname === '/login') {
+          window.location.href = destination;
+        }
+      }, 500);
+      
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       toast.error(msg);
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only reset loading on error
     }
+    // Don't reset loading on success - let the navigation happen
   };
 
   return (
